@@ -1,0 +1,65 @@
+Project Definition: Movie Ticket Booking Application
+
+The Movie Ticket Booking Application is a software system designed to facilitate users in booking movie tickets for various theaters and movie shows. The application allows users to view available movies, showtimes, theaters, seat availability, and prices. Additionally, theater administrators can manage movie shows, update available seats, and set prices for their shows.
+
+Modules for the Movie Ticket Booking Application:
+
+User Authentication and Registration Module:
+-Allows users to register for an account or log in to their existing accounts.
+-Handles user authentication and authorization for accessing different features of the application.
+
+Movie Listings Module:
+-Displays a list of available movies along with their details
+-Enables users to search for movies based on different criteria like genre, language, and release date.
+
+Theater Listings Module:
+-Provides a list of theaters where movies are being screened.
+-Users can view details about each theater, including location, contact information, and available movie shows.
+Movie Show Management Module (for Theater Administrators):
+-Theater administrators can add new movie shows, specifying details like movie title, showtime, available seats, and ticket prices.
+-They can also edit or delete existing movie shows as needed.
+
+Ticket Booking Module:
+-Allows users to select a movie show, choose seats, and book tickets for the selected show.
+
+Payment Gateway Integration Module:
+Seat Availability and Pricing Module:
+Allows users to provide feedback and ratings for movies they have watched.
+
+
+Movies
+-get all movie
+-show movie details
+-show moive screen in specific theater
+-movie by name or id
+-
+
+Theater
+-get all theaters add filter for area wise
+-get specific theater for movie
+-set total screen
+-set ticket 
+-set available tickets by rows and seat number(silver,gold ,platinum ) 
+-set timing
+
+booking
+-set booking user name and ticket 
+
+
+
+look into deep
+-save method
+-seatcapacity and seaction seat measur
+
+
+  @Prop([
+    {
+      theater_id: { type: 'ObjectId', ref: 'Theater' },
+      screen_number: Number,
+      show_timings: [String],
+    },
+  ])
+  screens: {
+    theaterId: Theater;
+    screenNumber: number;
+  }[];
