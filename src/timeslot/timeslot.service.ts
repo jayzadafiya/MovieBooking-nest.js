@@ -14,6 +14,7 @@ import { BookingSeatsDto } from './dto/booking-seats.dto';
 import Stripe from 'stripe';
 import { User } from 'src/auth/schema/user.schema';
 import { OptionalDto } from './dto/update-timeslot-details.dto';
+import { validateDate } from 'src/utils/check-date';
 
 @Injectable()
 export class TimeslotService {
@@ -82,8 +83,9 @@ export class TimeslotService {
     const update: any = { price, movie: movieId };
 
     if (optionalDto && optionalDto.start && optionalDto.end) {
-      update.start = this.convertTo12HourFormat(optionalDto.start);
-      update.end = this.convertTo12HourFormat(optionalDto.end);
+      const { start, end } = optionalDto;
+      update.start = this.convertTo12HourFormat(start);
+      update.end = this.convertTo12HourFormat(end);
     }
 
     const timeslot = await this.TimeslotModel.findByIdAndUpdate(id, update, {
@@ -94,7 +96,6 @@ export class TimeslotService {
     );
 
     timeslot.save();
-
     return timeslot;
   }
 
@@ -103,7 +104,7 @@ export class TimeslotService {
     movieId: string,
   ): Promise<Timeslot[]> {
     const currentTime = moment().format('hh:mm:ss A');
-    console.log(currentTime);
+
     const timeslots = await this.TimeslotModel.find({
       theater: new mongoose.Types.ObjectId(theaterId),
       movie: new mongoose.Types.ObjectId(movieId),
@@ -114,28 +115,33 @@ export class TimeslotService {
   }
 
   async getAvailableTimeslotsSeats(id: string, date: string) {
-    const searchDate = parseInt(date.split('-')[0]);
+    const searchDate = validateDate(date);
     const timeslot = await this.TimeslotModel.findById(id).select('seats');
     if (!timeslot) {
       throw new BadRequestException('Timeslot not found');
     }
     const availableSeats = [];
+    const bookSeats = [];
 
     for (const seatRow of timeslot.seats) {
       const availableInRow = [];
+      const bookSeatInRow = [];
 
       for (const seat of seatRow) {
         if (!seat.bookingDates.includes(searchDate)) {
           availableInRow.push(seat._id);
+        } else {
+          bookSeatInRow.push(seat._id);
         }
       }
 
       if (availableInRow.length > 0) {
         availableSeats.push(availableInRow);
       }
+      bookSeats.push(bookSeatInRow);
     }
 
-    return availableSeats;
+    return { availableSeats: availableSeats, bookedseats: bookSeats };
   }
 
   async bookTicketById(
@@ -145,26 +151,12 @@ export class TimeslotService {
   ): Promise<string> {
     const { seats, bookingDate } = bookingSeatsDto;
 
+    const validDate = validateDate(bookingDate);
+
     let amount = 0;
 
     const timeslot =
       await this.TimeslotModel.findById(timeslotId).select('+seats +price');
-
-    // for (const bookingSeat of seats) {
-    //   for (const seatRow of timeslot.seats) {
-    //     for (const seat of seatRow) {
-    //       if (seat._id.equals(bookingSeat._id)) {
-    //         // seat.isBooked = true;
-    //         if (seat.bookingDates.includes(parseInt(bookingDate))) {
-    //           throw new ConflictException('This seat is already book');
-    //         } else {
-    //           seat.bookingDates.push(parseInt(bookingDate));
-    //           amount += timeslot.price;
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
 
     const seatMap = {};
     for (const seatRow of timeslot.seats) {
@@ -188,10 +180,10 @@ export class TimeslotService {
 
     for (const bookingSeat of seats) {
       const seat = seatMap[bookingSeat._id.toString()];
-      if (seat.bookingDates.includes(bookingDate)) {
+      if (seat.bookingDates.includes(validDate)) {
         throw new ConflictException('This seat is already booked');
       } else {
-        seat.bookingDates.push(bookingDate);
+        seat.bookingDates.push(validDate);
         amount += timeslot.price;
       }
     }
@@ -224,6 +216,4 @@ export class TimeslotService {
     timeslot.save();
     return `you have to pay ${amount}`;
   }
-
-  async updateMovieAndShowtimeing() {}
 }

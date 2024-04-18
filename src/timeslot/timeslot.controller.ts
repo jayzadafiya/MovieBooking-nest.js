@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { TimeslotService } from './timeslot.service';
 import { CreateTimeslotDto } from './dto/create-timeslot.dto';
-import { Seat, Timeslot } from './schema/timeslot.schema';
+import { Timeslot } from './schema/timeslot.schema';
 import { BookingSeatsDto } from './dto/booking-seats.dto';
 import { RolesGuard } from 'src/role/role.gurd';
 import { Roles } from 'src/role/role.decorator';
@@ -51,7 +51,7 @@ export class TimeslotController {
   async getAvailableTimeslotsSeats(
     @Param('id') id: string,
     @Body('date') date: string,
-  ): Promise<Seat[][]> {
+  ): Promise<any> {
     return await this.timeslotService.getAvailableTimeslotsSeats(id, date);
   }
 

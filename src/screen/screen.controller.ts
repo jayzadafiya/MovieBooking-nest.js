@@ -1,4 +1,11 @@
-import { Controller, Post, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  Body,
+  UseGuards,
+  ConflictException,
+} from '@nestjs/common';
 import { ScreenService } from './screen.service';
 import { ScreenDto } from './dto/create-screen.dto';
 import { Screen } from './schema/screen.schema';
@@ -26,6 +33,16 @@ export class ScreenController {
     if (!theater) {
       throw new Error('Theater not found');
     }
+    await theater.populate('screens');
+
+    theater.screens.forEach((screen) => {
+      console.log(screen.screenName, screenDto.screenNumber);
+      if (screen.screenNumber === screenDto.screenNumber) {
+        throw new ConflictException(
+          'Screen already exist with this same number',
+        );
+      }
+    });
 
     const screen = await this.screenService.createScreen(screenDto, theaterId);
     theater.screens.push(screen);

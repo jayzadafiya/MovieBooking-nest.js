@@ -57,4 +57,8 @@ export class AuthService {
       token,
     });
   }
+
+  async getUserById(id: string): Promise<User> {
+    return await this.UserModel.findOne({ _id: id });
+  }
 }

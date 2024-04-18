@@ -19,15 +19,6 @@ export class User extends Document {
 
   @Prop({ required: true })
   passwordConfirm: string;
-
-  @Prop()
-  passwordChangedAt: Date;
-
-  @Prop()
-  passwordResetToken: string;
-
-  @Prop()
-  passwordResetExpires: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
@@ -37,13 +28,5 @@ UserSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, 12);
 
   this.passwordConfirm = undefined;
-  next();
-});
-
-UserSchema.pre('save', function (next) {
-  if (!this.isModified('password') || this.isNew) return next();
-
-  this.passwordChangedAt = new Date(Date.now() - 1000);
-
   next();
 });

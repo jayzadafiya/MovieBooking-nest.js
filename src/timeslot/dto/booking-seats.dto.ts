@@ -1,22 +1,21 @@
-import { IsMongoId } from 'class-validator';
+import { IsMongoId, IsNotEmpty, IsString } from 'class-validator';
 import mongoose from 'mongoose';
-import { IsNotEmpty, Validate } from 'class-validator';
-import { Transform } from 'class-transformer';
+
 import { Injectable, PipeTransform, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class DateValidator implements PipeTransform {
   transform(value: any): number {
-    console.log('value', value);
+    // console.log('value', value);
     const dateParts = value.bookingDate.split('/');
-
-    if (dateParts.length !== 3) {
+    console.log(dateParts);
+    if (dateParts.length !== 3 || dateParts[2].length !== 2) {
       throw new BadRequestException(
         'Invalid date format. Please provide date in the format dd/mm/yy',
       );
     }
     const [day, month, year] = dateParts.map(Number);
-    const providedDate = new Date(2000 + year, month - 1, day);
+    const providedDate = new Date(year, month - 1, day);
 
     const currentDate = new Date();
     console.log(currentDate, providedDate);
@@ -36,9 +35,8 @@ export class SeatDto {
 
 export class BookingSeatsDto {
   @IsNotEmpty()
-  @Transform((value: any) => new Date(value))
-  @Validate(DateValidator)
-  bookingDate: number;
+  @IsString()
+  bookingDate: string;
 
   seats: SeatDto[];
 }

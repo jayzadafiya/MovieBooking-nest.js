@@ -1,4 +1,4 @@
-import { IsMongoId, IsNumber } from 'class-validator';
+import { IsMongoId, IsNumber, IsOptional } from 'class-validator';
 import mongoose from 'mongoose';
 
 export class TimeslotDto {
@@ -11,4 +11,11 @@ export class TimeslotDto {
 
 export class AddMovieDto {
   timeslots: TimeslotDto[];
+
+  @IsOptional()
+  @IsMongoId()
+  ownerId?: string;
+
+  @IsOptional()
+  isdone: string;
 }

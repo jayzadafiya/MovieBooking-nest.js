@@ -20,6 +20,9 @@ export class Theater extends Document {
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }] })
   movies: Movie[];
+
+  @Prop({ require: true })
+  ownerId: mongoose.Schema.Types.ObjectId;
 }
 
 export const TheaterSchema = SchemaFactory.createForClass(Theater);

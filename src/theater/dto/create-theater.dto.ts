@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateTheaterDto {
   @IsNotEmpty()
@@ -8,4 +8,8 @@ export class CreateTheaterDto {
   @IsNotEmpty()
   @IsString()
   city: string;
+
+  @IsOptional()
+  @IsMongoId()
+  ownerId?: string;
 }

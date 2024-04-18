@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Theater } from './schema/theater.schema';
 import mongoose, { Types } from 'mongoose';
@@ -19,8 +23,14 @@ export class TheaterService {
     return await this.TheaterModel.findById(id);
   }
 
-  async createTheater(createTheaterDto: CreateTheaterDto): Promise<Theater> {
-    const theater = await this.TheaterModel.create(createTheaterDto);
+  async createTheater(
+    createTheaterDto: CreateTheaterDto,
+    ownerId: string,
+  ): Promise<Theater> {
+    const theater = await this.TheaterModel.create({
+      ...createTheaterDto,
+      ownerId,
+    });
 
     return theater;
   }
@@ -29,6 +39,7 @@ export class TheaterService {
     theaterId: string,
     movieId: string,
     addMoveDto: AddMovieDto,
+    ownerId: string,
   ): Promise<Theater> {
     if (
       !Types.ObjectId.isValid(theaterId) ||
@@ -42,18 +53,34 @@ export class TheaterService {
     const movie = await this.moviesService.getMovieById(movieId);
 
     if (!theater || !movie) {
-      throw new Error('Theater or movie not found');
+      throw new BadRequestException('Theater or movie not found');
+    }
+
+    if (theater.ownerId.toString() !== ownerId) {
+      throw new BadRequestException(
+        'You are not owner of this theater so you are not able to add movie',
+      );
+    }
+
+    const movieIds = theater.movies.map((movie) => movie._id.toString());
+
+    if (movieIds.includes(movieId)) {
+      throw new ConflictException('movie already exist');
     }
 
     //timeslot validation
-    const timeslotIds: Types.ObjectId[] = theater.timeslots.map((timeslot) =>
+    const timeslotIds = theater.timeslots.map((timeslot) =>
       timeslot._id.toString(),
     );
 
     addMoveDto.timeslots.forEach((timeslot) => {
       if (timeslotIds.includes(timeslot._id)) {
         const { _id, price } = timeslot;
-        this.timeslotService.updateTimeslot(_id.toString(), price, movie._id.toString());
+        this.timeslotService.updateTimeslot(
+          _id.toString(),
+          price,
+          movie._id.toString(),
+        );
       } else {
         throw new Error(
           `timeslot with this id ${timeslot._id} is not present into this theater`,
